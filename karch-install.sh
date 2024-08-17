@@ -566,7 +566,7 @@ done
 
 # Final validation.
 info_print "Performing final system validation..."
-if ! grep -q "/mnt" /mnt/etc/fstab; then
+if ! grep -q "/" /mnt/etc/fstab; then
   error_print "Fstab seems incomplete. Please review."
 fi
 
