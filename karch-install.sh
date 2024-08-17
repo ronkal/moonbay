@@ -507,6 +507,12 @@ arch-chroot /mnt /bin/bash -e <<EOF
     mount -a &>/dev/null
     chmod 750 /.snapshots
 
+    # Disable PC Speaker
+    cat >/etc/modprobe.d/nobeep.conf <<EOF
+    blacklist pcspkr
+    blacklist snd_pcsp
+    EOF
+
     # Installing GRUB.
     grub-install --target=x86_64-efi --efi-directory=/efi/ --bootloader-id=GRUB &>/dev/null
 
