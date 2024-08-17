@@ -2,7 +2,7 @@
 ![](https://img.shields.io/github/stars/ronkal/karch-install?label=Stars)
 ![](https://img.shields.io/github/forks/ronkal/karch-install?label=Forks)
 
-[karch-install](https://github.com/ronkal/karch-install) is a **bash script** that bootstraps [Arch Linux](https://archlinux.org/) with sane opinionated defaults.
+[karch-install](https://github.com/ronkal/karch-install) is a **bash script** that bootstraps [Arch Linux](https://archlinux.org/) with sane opinionated defaults. Based on [classy-giraffe/easy-arch](https://github.com/classy-giraffe/easy-arch).
 
 - **BTRFS snapshots**: you will have a resilient setup that automatically takes snapshots of your volumes based on a weekly schedule
 - **ZRAM**: the setup use ZRAM which aims to replace traditional swap partition/files by making the system snappier
