@@ -151,7 +151,7 @@ bluetooth_installer() {
 # Installing audio drivers (function).
 audio_installer() {
   info_print "Installing audio firmwares (pipewire) and pavucontrol."
-  pacstrap /mnt pipewire pipewire-pulse pipewire-audio pipewire-alsa pipewire-jack pavucontrol &>/dev/null/
+  pacstrap /mnt pipewire pipewire-pulse pipewire-audio pipewire-alsa pipewire-jack pavucontrol &>/dev/null
 }
 
 # Setting up a password for the user account (function).
