@@ -390,7 +390,7 @@ fi
 
 # Formatting the ARCH as BTRFS.
 info_print "Formatting the root partition as BTRFS."
-if ! mkfs.btrfs "$ARCH" &>/dev/null; then
+if ! mkfs.btrfs -f "$ARCH" &>/dev/null; then
   error_print "Failed to format root partition as BTRFS. Exiting."
   exit 1
 fi
