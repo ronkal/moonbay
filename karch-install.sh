@@ -479,7 +479,7 @@ HOOKS=(base udev systemd autodetect microcode modconf kms keyboard keymap consol
 EOF
 
 # Configuring the system.
-info_print "Configuring the system (timezone, system clock, initramfs, Snapper, GRUB)."
+info_print "Configuring the system (timezone, system clock, initramfs, Snapper, PC Speaker, GRUB, mirrors)."
 arch-chroot /mnt /bin/bash -e <<EOF
 
     # Setting up timezone.
@@ -521,7 +521,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     reflector -l 200 -f 30 -c "us," -p https -n 30 -a 48 --sort rate --save /etc/pacman.d/mirrorlist &>/dev/null
 
     # Configure reflector.timer
-    echo -e "--latest 200\n--fastest 30\n--country \"us,\"\n--protocol https\n--number 30\n--age 48\n--sort rate\n--save /etc/pacman.d/mirrorlist > /etc/xdg/reflector/reflector.conf
+    echo -e "--latest 200\n--fastest 30\n--country \"us,\"\n--protocol https\n--number 30\n--age 48\n--sort rate\n--save /etc/pacman.d/mirrorlist" > /etc/xdg/reflector/reflector.conf
 
 EOF
 
