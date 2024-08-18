@@ -518,7 +518,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     # Update mirrors
     mv /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
-    reflector -l 200 -f 30 -c "us," -p https -n 30 -a 48 --sort rate --save /etc/pacman.d/mirrorlist
+    reflector -l 200 -f 30 -c "us," -p https -n 30 -a 48 --sort rate --save /etc/pacman.d/mirrorlist &>/dev/null
 
     # Configure reflector.timer
     echo -e "--latest 200\n--fastest 30\n--country \"us,\"\n--protocol https\n--number 30\n--age 48\n--sort rate\n--save /etc/pacman.d/mirrorlist > /etc/xdg/reflector/reflector.conf
