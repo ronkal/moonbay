@@ -519,6 +519,22 @@ arch-chroot /mnt /bin/bash -e <<EOF
     # Creating grub config file.
     grub-mkconfig -o /boot/grub/grub.cfg &>/dev/null
 
+    # Update mirrors
+    mv /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+    reflector -l 200 -f 30 -c "us," -p https -n 30 -a 48 --sort rate --save /etc/pacman.d/mirrorlist
+
+    # Configure reflector.timer
+    cat >/etc/xdg/reflector/reflector.conf <<EOF
+    --latest 200
+    --fastest 30
+    --country "us,"
+    --protocol https
+    --number 30
+    --age 48
+    --sort rate
+    --save /etc/pacman.d/mirrorlist
+    EOF
+
 EOF
 
 # Setting root password.
