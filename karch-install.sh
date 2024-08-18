@@ -508,10 +508,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     chmod 750 /.snapshots
 
     # Disable PC Speaker
-    cat >/etc/modprobe.d/nobeep.conf <<EOF
-    blacklist pcspkr
-    blacklist snd_pcsp
-    EOF
+    echo -e "blacklist pcspkr\nblacklist snd_pcsp" > /etc/modprobe.d/nobeep.conf
 
     # Installing GRUB.
     grub-install --target=x86_64-efi --efi-directory=/efi/ --bootloader-id=GRUB &>/dev/null
@@ -524,16 +521,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     reflector -l 200 -f 30 -c "us," -p https -n 30 -a 48 --sort rate --save /etc/pacman.d/mirrorlist
 
     # Configure reflector.timer
-    cat >/etc/xdg/reflector/reflector.conf <<EOF
-    --latest 200
-    --fastest 30
-    --country "us,"
-    --protocol https
-    --number 30
-    --age 48
-    --sort rate
-    --save /etc/pacman.d/mirrorlist
-    EOF
+    echo -e "--latest 200\n--fastest 30\n--country \"us,\"\n--protocol https\n--number 30\n--age 48\n--sort rate\n--save /etc/pacman.d/mirrorlist > /etc/xdg/reflector/reflector.conf
 
 EOF
 
