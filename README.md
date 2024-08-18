@@ -13,7 +13,7 @@
 ## One-step Automated Install (shorter)
 
 ```bash
-bash <(curl -fsSL http://raw.githubusercontent.com/ronkal/karch-install/main/karch-install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/ronkal/karch-install/main/karch-install.sh)
 ```
 
 ## Alternative Methods (manual)
