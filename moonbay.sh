@@ -3,210 +3,24 @@
 # Cleaning the TTY.
 clear
 
-# Cosmetics (colours for text).
-BOLD='\e[1m'
-BRED='\e[91m'
-BBLUE='\e[34m'
-BGREEN='\e[92m'
-BYELLOW='\e[93m'
-RESET='\e[0m'
-
 # Log file for debugging.
-LOG_FILE="/var/log/arch_install.log"
+LOG_FILE="/var/log/moonbay.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
-# Pretty print (function).
-info_print() {
-    echo -e "${BOLD}${BGREEN}[ ${BYELLOW}•${BGREEN} ] $1${RESET}"
-}
+source ./scripts/cosmetics.sh
+source ./scripts/disk_operations.sh
+source ./scripts/networking.sh
+source ./scripts/preferences.sh
+source ./scripts/user_operations.sh
+source ./scripts/vm.sh
 
-# Pretty print for input (function).
-input_print() {
-    echo -ne "${BOLD}${BYELLOW}[ ${BGREEN}•${BYELLOW} ] $1${RESET}"
-}
-
-# Alert user of bad input (function).
-error_print() {
-    echo -e "${BOLD}${BRED}[ ${BBLUE}•${BRED} ] $1${RESET}"
-}
-
-# Virtualization check (function).
-virt_check() {
-    hypervisor=$(systemd-detect-virt)
-    case $hypervisor in
-    kvm)
-        info_print "KVM has been detected, setting up guest tools."
-        pacstrap /mnt qemu-guest-agent &>/dev/null
-        systemctl enable qemu-guest-agent --root=/mnt &>/dev/null
-        ;;
-    vmware)
-        info_print "VMWare Workstation/ESXi has been detected, setting up guest tools."
-        pacstrap /mnt open-vm-tools >/dev/null
-        systemctl enable vmtoolsd --root=/mnt &>/dev/null
-        systemctl enable vmware-vmblock-fuse --root=/mnt &>/dev/null
-        ;;
-    oracle)
-        info_print "VirtualBox has been detected, setting up guest tools."
-        pacstrap /mnt virtualbox-guest-utils &>/dev/null
-        systemctl enable vboxservice --root=/mnt &>/dev/null
-        ;;
-    microsoft)
-        info_print "Hyper-V has been detected, setting up guest tools."
-        pacstrap /mnt hyperv &>/dev/null
-        systemctl enable hv_fcopy_daemon --root=/mnt &>/dev/null
-        systemctl enable hv_kvp_daemon --root=/mnt &>/dev/null
-        systemctl enable hv_vss_daemon --root=/mnt &>/dev/null
-        ;;
-    esac
-}
-
-# Selecting a kernel to install (function).
-kernel_selector() {
-    while true; do
-        info_print "List of kernels:"
-        info_print "1) Stable: Vanilla Linux kernel with a few specific Arch Linux patches applied"
-        info_print "2) Longterm: Long-term support (LTS) Linux kernel"
-        info_print "3) Zen Kernel: A Linux kernel optimized for desktop usage"
-        input_print "Please select the number of the corresponding kernel (e.g. 1): "
-        read -r kernel_choice
-        case $kernel_choice in
-        1)
-            kernel="linux"
-            break
-            ;;
-        2)
-            kernel="linux-lts"
-            break
-            ;;
-        3)
-            kernel="linux-zen"
-            break
-            ;;
-        *)
-            error_print "You did not enter a valid selection, please try again."
-            ;;
-        esac
-    done
-}
-
-# Selecting a way to handle internet connection (function).
-network_selector() {
-    while true; do
-        info_print "Network utilities:"
-        info_print "1) NetworkManager: Universal network utility (both WiFi and Ethernet, highly recommended)"
-        info_print "2) IWD: Utility to connect to networks written by Intel (WiFi-only, built-in DHCP client)"
-        info_print "3) wpa_supplicant: Utility with support for WEP and WPA/WPA2 (WiFi-only, DHCPCD will be automatically installed)"
-        info_print "4) dhcpcd: Basic DHCP client (Ethernet connections or VMs)"
-        info_print "5) I will do this on my own (only advanced users)"
-        input_print "Please select the number of the corresponding networking utility (e.g. 1): "
-        read -r network_choice
-        if ((1 <= network_choice && network_choice <= 5)); then
-            break
-        else
-            error_print "You did not enter a valid selection, please try again."
-        fi
-    done
-}
-
-# Installing the chosen networking method to the system (function).
-network_installer() {
-    case $network_choice in
-    1)
-        info_print "Installing and enabling NetworkManager."
-        pacstrap /mnt networkmanager >/dev/null
-        systemctl enable NetworkManager --root=/mnt &>/dev/null
-        ;;
-    2)
-        info_print "Installing and enabling IWD."
-        pacstrap /mnt iwd >/dev/null
-        systemctl enable iwd --root=/mnt &>/dev/null
-        ;;
-    3)
-        info_print "Installing and enabling wpa_supplicant and dhcpcd."
-        pacstrap /mnt wpa_supplicant dhcpcd >/dev/null
-        systemctl enable wpa_supplicant --root=/mnt &>/dev/null
-        systemctl enable dhcpcd --root=/mnt &>/dev/null
-        ;;
-    4)
-        info_print "Installing dhcpcd."
-        pacstrap /mnt dhcpcd >/dev/null
-        systemctl enable dhcpcd --root=/mnt &>/dev/null
-        ;;
-    esac
-
-    # Validate network connection
-    info_print "Validating network connection..."
-    if ! arch-chroot /mnt ping -c 1 archlinux.org &>/dev/null; then
-        error_print "Network connection is not working. Please check your network settings."
-        exit 1
-    fi
-}
-
-# Installing bluetooth support (function).
-bluetooth_installer() {
-    info_print "Installing bluetooth (enable it after installation)."
-    pacstrap /mnt bluez bluez-utils &>/dev/null
-}
-
-# Installing audio drivers (function).
+# Installing audio drivers.
 audio_installer() {
-    info_print "Installing audio firmwares (pipewire) and pavucontrol."
-    pacstrap /mnt pipewire pipewire-pulse pipewire-audio pipewire-alsa pipewire-jack pavucontrol &>/dev/null
+    info_print "Installing audio firmwares (pipewire, wireplumber, and pavucontrol)."
+    pacstrap /mnt pipewire pipewire-pulse pipewire-audio pipewire-alsa pipewire-jack pavucontrol wireplumber &>/dev/null
 }
 
-# Setting up a password for the user account (function).
-userpass_selector() {
-    while true; do
-        input_print "Please enter a name for your user account (leave empty to not create one): "
-        read -r username
-        if [[ -z "$username" ]]; then
-            return 0
-        fi
-        input_print "Please enter a password for $username (you're not going to see the password): "
-        read -r -s userpass
-        if [[ -z "$userpass" ]]; then
-            echo
-            error_print "You need to enter a password for $username, please try again."
-            continue
-        fi
-        echo
-        input_print "Please enter the password again (you're not going to see it): "
-        read -r -s userpass2
-        echo
-        if [[ "$userpass" != "$userpass2" ]]; then
-            echo
-            error_print "Passwords don't match, please try again."
-        else
-            break
-        fi
-    done
-    return 0
-}
-
-# Setting up a password for the root account (function).
-rootpass_selector() {
-    while true; do
-        input_print "Please enter a password for the root user (you're not going to see it): "
-        read -r -s rootpass
-        if [[ -z "$rootpass" ]]; then
-            echo
-            error_print "You need to enter a password for the root user, please try again."
-            continue
-        fi
-        echo
-        input_print "Please, repeat the password for confirmation (you're not going to see it): "
-        read -r -s rootpass2
-        echo
-        if [[ "$rootpass" != "$rootpass2" ]]; then
-            error_print "Passwords don't match, please try again."
-        else
-            break
-        fi
-    done
-    return 0
-}
-
-# Microcode detector (function).
+# Microcode detector.
 microcode_detector() {
     CPU=$(grep vendor_id /proc/cpuinfo)
     if [[ "$CPU" == *"AuthenticAMD"* ]]; then
@@ -216,74 +30,6 @@ microcode_detector() {
         info_print "An Intel CPU has been detected, the Intel microcode will be installed."
         microcode="intel-ucode"
     fi
-}
-
-# User enters a hostname (function).
-hostname_selector() {
-    while true; do
-        input_print "Please enter a hostname for your machine: "
-        read -r hostname
-        if [[ -z "$hostname" ]]; then
-            error_print "You need to enter a hostname in order to continue."
-        else
-            break
-        fi
-    done
-    return 0
-}
-
-# User chooses the locale (function).
-locale_selector() {
-    while true; do
-        input_print "Please insert the locale you use (format: xx_XX. Enter empty to use en_US, or \"/\" to search locales): "
-        read -r locale
-        case "$locale" in
-        '')
-            locale="en_US.UTF-8"
-            info_print "$locale will be the default locale."
-            return 0
-            ;;
-        '/')
-            sed -E '/^# +|^#$/d;s/^#| *$//g;s/ .*/ (Charset:&)/' /etc/locale.gen | less -M
-            clear
-            ;;
-        *)
-            if grep -q "^#\?$(sed 's/[].*[]/\\&/g' <<<"$locale") " /etc/locale.gen; then
-                return 0
-            else
-                error_print "The specified locale doesn't exist or isn't supported."
-            fi
-            ;;
-        esac
-    done
-}
-
-# User chooses the console keyboard layout (function).
-keyboard_selector() {
-    while true; do
-        input_print "Please insert the keyboard layout you'd like to use (enter empty to use US, or \"/\" to look up for keyboard layouts): "
-        read -r kblayout
-        case "$kblayout" in
-        '')
-            kblayout="us"
-            info_print "The standard US keyboard layout will be used."
-            return 0
-            ;;
-        '/')
-            localectl list-keymaps
-            clear
-            ;;
-        *)
-            if localectl list-keymaps | grep -Fxq "$kblayout"; then
-                info_print "Changing console layout to $kblayout."
-                loadkeys "$kblayout"
-                return 0
-            else
-                error_print "The specified keymap doesn't exist."
-            fi
-            ;;
-        esac
-    done
 }
 
 # Welcome screen.
@@ -300,26 +46,43 @@ ${RESET}"
 
 info_print "Welcome to moonbay, a script made to simplify the process of installing Arch Linux."
 
-# Setting up keyboard layout.
-until keyboard_selector; do :; done
+# Detect Windows partitions
+if blkid | grep -q 'ntfs'; then
+    info_print "Windows installation detected."
+    info_print "Would you like to set up for Dual Boot? (y/N)"
+    read -r dualboot
+
+    # If $dualboot is equal to "y"
+    if [[ "${dualboot,,}" =~ ^(yes|y)$ ]]; then
+        # Proceed with dual boot installation
+        exit 0
+    fi
+
+    # If it's empty or is anything else, proceed with standalone installation.
+fi
+
+# [NOTE] This should be the OPTIONAL installation, not the default.
+# Since this one wipes the entire disk, rather than a partition before continuing with normal procedure.
+# For both methods (Dual Boot, and Standalone), the rest of the installation process is practically the same.
+
+# STANDALONE INSTALLATION
 
 # Choosing the target for the installation.
 info_print "Available disks for the installation:"
 PS3="Please select the number of the corresponding disk (e.g. 1): "
+
 select ENTRY in $(lsblk -dpnoNAME | grep -P "/dev/sd|nvme|vd"); do
-    DISK="$ENTRY"
-    info_print "Arch Linux will be installed on the following disk: $DISK"
-    break
+    if [[ -n "$ENTRY" ]]; then
+        DISK="$ENTRY"
+        info_print "Arch Linux will be installed on the disk: $DISK"
+        break
+    else
+        info_print "Invalid selection. Please try again."
+    fi
 done
 
-# Handling no disk selection.
-if [ -z "$DISK" ]; then
-    error_print "No valid disk selected. Exiting."
-    exit 1
-fi
-
 # Double confirmation before disk wipe.
-input_print "This will delete the current partition table on $DISK. Do you agree [y/N]?: "
+input_print "This will delete the current partition table on $DISK. Do you agree (y/N)?: "
 read -r disk_response
 if ! [[ "${disk_response,,}" =~ ^(yes|y)$ ]]; then
     error_print "Quitting."
@@ -327,7 +90,7 @@ if ! [[ "${disk_response,,}" =~ ^(yes|y)$ ]]; then
 fi
 
 # Final confirmation for disk wipe.
-input_print "This will delete all data on $DISK. Are you sure you want to continue [yes/NO]?: "
+input_print "This will delete all data on $DISK. Are you sure you want to continue (y/N)?: "
 read -r final_confirmation
 if ! [[ "${final_confirmation,,}" =~ ^(yes|y)$ ]]; then
     error_print "Disk wipe aborted."
@@ -345,17 +108,23 @@ if ! sgdisk -Zo "$DISK" &>/dev/null; then
     exit 1
 fi
 
-# Setting up the kernel.
+# Choosing locale.
+until locale_selector; do :; done
+
+# Choosing keyboard layout.
+until kblayout_selector; do :; done
+
+# Choosing kernel.
 until kernel_selector; do :; done
 
-# User choses the network.
-until network_selector; do :; done
-
-# User choses the locale.
-until locale_selector; do :; done
+# Setting up networking.
+network_setup
 
 # User choses the hostname.
 until hostname_selector; do :; done
+
+# Installing bluetooth
+bluetooth_installer
 
 # User sets up the user/root passwords.
 until userpass_selector; do :; done
