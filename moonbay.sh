@@ -93,8 +93,8 @@ kernel_selector() {
 network_selector() {
   while true; do
     info_print "Network utilities:"
-    info_print "1) IWD: Utility to connect to networks written by Intel (WiFi-only, built-in DHCP client)"
-    info_print "2) NetworkManager: Universal network utility (both WiFi and Ethernet, highly recommended)"
+    info_print "1) NetworkManager: Universal network utility (both WiFi and Ethernet, highly recommended)"
+    info_print "2) IWD: Utility to connect to networks written by Intel (WiFi-only, built-in DHCP client)"
     info_print "3) wpa_supplicant: Utility with support for WEP and WPA/WPA2 (WiFi-only, DHCPCD will be automatically installed)"
     info_print "4) dhcpcd: Basic DHCP client (Ethernet connections or VMs)"
     info_print "5) I will do this on my own (only advanced users)"
@@ -112,14 +112,14 @@ network_selector() {
 network_installer() {
   case $network_choice in
   1)
-    info_print "Installing and enabling IWD."
-    pacstrap /mnt iwd >/dev/null
-    systemctl enable iwd --root=/mnt &>/dev/null
-    ;;
-  2)
     info_print "Installing and enabling NetworkManager."
     pacstrap /mnt networkmanager >/dev/null
     systemctl enable NetworkManager --root=/mnt &>/dev/null
+    ;;
+  2)
+    info_print "Installing and enabling IWD."
+    pacstrap /mnt iwd >/dev/null
+    systemctl enable iwd --root=/mnt &>/dev/null
     ;;
   3)
     info_print "Installing and enabling wpa_supplicant and dhcpcd."
