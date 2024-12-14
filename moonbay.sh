@@ -157,7 +157,7 @@ audio_installer() {
 # Setting up a password for the user account (function).
 userpass_selector() {
   while true; do
-    input_print "Please enter name for a user account (enter empty to not create one): "
+    input_print "Please enter a name for your user account (leave empty to not create one): "
     read -r username
     if [[ -z "$username" ]]; then
       return 0
@@ -194,7 +194,7 @@ rootpass_selector() {
       continue
     fi
     echo
-    input_print "Please enter the password again (you're not going to see it): "
+    input_print "Please, repeat the password for confirmation (you're not going to see it): "
     read -r -s rootpass2
     echo
     if [[ "$rootpass" != "$rootpass2" ]]; then
@@ -221,7 +221,7 @@ microcode_detector() {
 # User enters a hostname (function).
 hostname_selector() {
   while true; do
-    input_print "Please enter the hostname: "
+    input_print "Please enter a hostname for your machine: "
     read -r hostname
     if [[ -z "$hostname" ]]; then
       error_print "You need to enter a hostname in order to continue."
@@ -261,7 +261,7 @@ locale_selector() {
 # User chooses the console keyboard layout (function).
 keyboard_selector() {
   while true; do
-    input_print "Please insert the keyboard layout to use in console (enter empty to use US, or \"/\" to look up for keyboard layouts): "
+    input_print "Please insert the keyboard layout you'd like to use (enter empty to use US, or \"/\" to look up for keyboard layouts): "
     read -r kblayout
     case "$kblayout" in
     '')
